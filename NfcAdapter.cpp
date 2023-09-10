@@ -1,8 +1,11 @@
 #include <NfcAdapter.h>
+#include <NTAG424.h>
+#include <ISO14443aTag.h>
 
 NfcAdapter::NfcAdapter(PN532Interface &interface)
 {
     shield = new PN532(interface);
+    tag = ISO14443aTag();
 }
 
 NfcAdapter::~NfcAdapter(void)
@@ -39,16 +42,20 @@ void NfcAdapter::begin(boolean verbose)
 boolean NfcAdapter::tagPresent(unsigned long timeout)
 {
     uint8_t success;
-    uidLength = 0;
+    uint8_t uid[16];
+    uint8_t uidLength;
+    uint8_t apdu[64];
+    uint8_t apduLength;
 
     if (timeout == 0)
     {
-        success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, (uint8_t*)&uidLength);
+        success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, apdu, &apduLength);
     }
     else
     {
-        success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, (uint8_t*)&uidLength, timeout);
+        success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, apdu, &apduLength, timeout);
     }
+    tag.parseISO14443aTag(apdu, apduLength);
     return success;
 }
 
@@ -63,7 +70,7 @@ boolean NfcAdapter::format()
 {
     boolean success;
 #ifdef NDEF_SUPPORT_MIFARE_CLASSIC
-    if (uidLength == 4)
+    if (tag.type == ISO14443aTag::Type::MifareClassic)
     {
         MifareClassic mifareClassic = MifareClassic(*shield);
         success = mifareClassic.formatNDEF(uid, uidLength);
@@ -81,10 +88,8 @@ boolean NfcAdapter::format()
 
 boolean NfcAdapter::clean()
 {
-    uint8_t type = guessTagType();
-
 #ifdef NDEF_SUPPORT_MIFARE_CLASSIC
-    if (type == TAG_TYPE_MIFARE_CLASSIC)
+    if (tag.type == ISO14443aTag::Type::MifareClassic)
     {
         #ifdef NDEF_DEBUG
         Serial.println(F("Cleaning Mifare Classic"));
@@ -94,7 +99,7 @@ boolean NfcAdapter::clean()
     }
     else
 #endif
-    if (type == TAG_TYPE_2)
+    if (tag.type == ISO14443aTag::Type::Type2)
     {
         #ifdef NDEF_DEBUG
         Serial.println(F("Cleaning Mifare Ultralight"));
@@ -105,20 +110,16 @@ boolean NfcAdapter::clean()
     else
     {
 #ifdef NDEF_USE_SERIAL
-        Serial.print(F("No driver for card type "));Serial.println(type);
+        Serial.print(F("No driver for card type "));Serial.println(static_cast<int>(tag.type));
 #endif
         return false;
     }
-
 }
-
 
 NfcTag NfcAdapter::read()
 {
-    uint8_t type = guessTagType();
-
 #ifdef NDEF_SUPPORT_MIFARE_CLASSIC
-    if (type == TAG_TYPE_MIFARE_CLASSIC)
+    if (tag.type == ISO14443aTag::Type::MifareClassic)
     {
         #ifdef NDEF_DEBUG
         Serial.println(F("Reading Mifare Classic"));
@@ -128,7 +129,7 @@ NfcTag NfcAdapter::read()
     }
     else
 #endif
-    if (type == TAG_TYPE_2)
+    if (tag.type == ISO14443aTag::Type::Type2)
     {
         #ifdef NDEF_DEBUG
         Serial.println(F("Reading Mifare Ultralight"));
@@ -136,7 +137,15 @@ NfcTag NfcAdapter::read()
         MifareUltralight ultralight = MifareUltralight(*shield);
         return ultralight.read(uid, uidLength);
     }
-    else if (type == TAG_TYPE_UNKNOWN)
+    else if (tag.type == ISO14443aTag::Type::Type4)
+    {
+#ifdef NDEF_USE_SERIAL
+        Serial.print(F("Reading NTAG424"));
+#endif
+        NTAGType4 ntag424 = NTAGType4(*shield);
+        return ntag424.read();
+    }
+    else if (tag.type == ISO14443aTag::Type::Unknown)
     {
 #ifdef NDEF_USE_SERIAL
         Serial.print(F("Can not determine tag type"));
@@ -149,16 +158,13 @@ NfcTag NfcAdapter::read()
         // TODO should set type here
         return NfcTag(uid, uidLength);
     }
-
 }
 
 boolean NfcAdapter::write(NdefMessage& ndefMessage)
 {
     boolean success;
-    uint8_t type = guessTagType();
-
 #ifdef NDEF_SUPPORT_MIFARE_CLASSIC
-    if (type == TAG_TYPE_MIFARE_CLASSIC)
+    if (tag.type == ISO14443aTag::Type::MifareClassic)
     {
         #ifdef NDEF_DEBUG
         Serial.println(F("Writing Mifare Classic"));
@@ -168,7 +174,7 @@ boolean NfcAdapter::write(NdefMessage& ndefMessage)
     }
     else
 #endif
-    if (type == TAG_TYPE_2)
+    if (tag.type == ISO14443aTag::Type::Type2)
     {
         #ifdef NDEF_DEBUG
         Serial.println(F("Writing Mifare Ultralight"));
@@ -176,7 +182,7 @@ boolean NfcAdapter::write(NdefMessage& ndefMessage)
         MifareUltralight mifareUltralight = MifareUltralight(*shield);
         success = mifareUltralight.write(ndefMessage, uid, uidLength);
     }
-    else if (type == TAG_TYPE_UNKNOWN)
+    else if (tag.type == ISO14443aTag::Type::Unknown)
     {
 #ifdef NDEF_USE_SERIAL
         Serial.print(F("Can not determine tag type"));
@@ -186,33 +192,10 @@ boolean NfcAdapter::write(NdefMessage& ndefMessage)
     else
     {
 #ifdef NDEF_USE_SERIAL
-        Serial.print(F("No driver for card type "));Serial.println(type);
+        Serial.print(F("No driver for card type "));Serial.println(static_cast<int>(tag.type));
 #endif
         success = false;
     }
 
     return success;
-}
-
-// TODO this should return a Driver MifareClassic, MifareUltralight, Type 4, Unknown
-// Guess Tag Type by looking at the ATQA and SAK values
-// Need to follow spec for Card Identification. Maybe AN1303, AN1305 and ???
-unsigned int NfcAdapter::guessTagType()
-{
-
-    // 4 byte id - Mifare Classic
-    //  - ATQA 0x4 && SAK 0x8
-    // 7 byte id
-    //  - ATQA 0x44 && SAK 0x8 - Mifare Classic
-    //  - ATQA 0x44 && SAK 0x0 - Mifare Ultralight NFC Forum Type 2
-    //  - ATQA 0x344 && SAK 0x20 - NFC Forum Type 4
-
-    if (uidLength == 4)
-    {
-        return TAG_TYPE_MIFARE_CLASSIC;
-    }
-    else
-    {
-        return TAG_TYPE_2;
-    }
 }

@@ -3,12 +3,14 @@
 
 #include <PN532Interface.h>
 #include <PN532.h>
-#include <NfcTag.h>
-#include <Ndef.h>
+#include "NfcTag.h"
+#include "Ndef.h"
 
 // Drivers
 #include <MifareClassic.h>
 #include <MifareUltralight.h>
+#include "NTAGType4.h"
+#include "ISO14443aTag.h"
 
 #define TAG_TYPE_MIFARE_CLASSIC (0)
 #define TAG_TYPE_1 (1)
@@ -37,9 +39,9 @@ class NfcAdapter {
         boolean clean();
     private:
         PN532* shield;
-        byte uid[7];  // Buffer to store the returned UID
+        ISO14443aTag tag;
+        byte uid[16];  // Buffer to store the returned UID
         unsigned int uidLength; // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
-        unsigned int guessTagType();
 };
 
 #endif
