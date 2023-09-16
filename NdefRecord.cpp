@@ -285,6 +285,58 @@ String NdefRecord::getId()
     return String(id);
 }
 
+String NdefRecord::getUri()
+{
+    String uri = "";
+    if (getType() == "U") {
+        if (_payloadLength > 0) {
+            switch (_payload[0]) {
+                case 0x000: break;
+                case 0x001: uri += "http://www."; break;
+                case 0x002: uri += "https://www."; break;
+                case 0x003: uri += "http://"; break;
+                case 0x004: uri += "https://"; break;
+                case 0x005: uri += "tel:"; break;
+                case 0x006: uri += "mailto:"; break;
+                case 0x007: uri += "ftp://anonymous:anonymous@"; break;
+                case 0x008: uri += "ftp://ftp."; break;
+                case 0x009: uri += "ftps://"; break;
+                case 0x00A: uri += "sftp://"; break;
+                case 0x00B: uri += "smb://"; break;
+                case 0x00C: uri += "nfs://"; break;
+                case 0x00D: uri += "ftp://"; break;
+                case 0x00E: uri += "dav://"; break;
+                case 0x00F: uri += "news:"; break;
+                case 0x010: uri += "telnet://"; break;
+                case 0x011: uri += "imap:"; break;
+                case 0x012: uri += "rtsp://"; break;
+                case 0x013: uri += "urn:"; break;
+                case 0x014: uri += "pop:"; break;
+                case 0x015: uri += "sip:"; break;
+                case 0x016: uri += "sips:"; break;
+                case 0x017: uri += "tftp:"; break;
+                case 0x018: uri += "btspp://"; break;
+                case 0x019: uri += "btl2cap://"; break;
+                case 0x01A: uri += "btgoep://"; break;
+                case 0x01B: uri += "tcpobex://"; break;
+                case 0x01C: uri += "irdaobex://"; break;
+                case 0x01D: uri += "file://"; break;
+                case 0x01E: uri += "urn:epc:id:"; break;
+                case 0x01F: uri += "urn:epc:tag:"; break;
+                case 0x020: uri += "urn:epc:pat:"; break;
+                case 0x021: uri += "urn:epc:raw:"; break;
+                case 0x022: uri += "urn:epc:"; break;
+                case 0x023: uri += "urn:nfc:"; break;
+                default: break;
+            }
+            for (int i = 1; i < _payloadLength; ++i) {
+                uri += (char)_payload[i];
+            }
+        }
+    }
+    return uri;
+}
+
 void NdefRecord::getId(byte *id)
 {
     memcpy(id, _id, _idLength);

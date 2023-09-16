@@ -37,6 +37,7 @@ class NdefRecord
         // convenience methods
         String getType();
         String getId();
+        String getUri();
 
         void setTnf(byte tnf);
         void setType(const byte *type, const unsigned int numBytes);
