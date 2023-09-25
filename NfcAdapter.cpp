@@ -1,5 +1,4 @@
 #include <NfcAdapter.h>
-#include <NTAG424.h>
 #include <ISO14443aTag.h>
 
 NfcAdapter::NfcAdapter(PN532Interface &interface)
