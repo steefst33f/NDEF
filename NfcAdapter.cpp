@@ -43,7 +43,7 @@ boolean NfcAdapter::tagPresent(unsigned long timeout)
     uint8_t success;
     uint8_t uid[16];
     uint8_t uidLength;
-    uint8_t apdu[64];
+    uint8_t apdu[256];
     uint8_t apduLength;
 
     if (timeout == 0)
