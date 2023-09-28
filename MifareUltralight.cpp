@@ -7,6 +7,7 @@
 #define ULTRALIGHT_MESSAGE_LENGTH_INDEX 1
 #define ULTRALIGHT_DATA_START_INDEX 2
 #define ULTRALIGHT_MAX_PAGE 63
+#define NTAGTYPE2_MAX_PAGE 231
 
 #define NFC_FORUM_TAG_TYPE_2 ("NFC Forum Type 2")
 
@@ -45,7 +46,7 @@ NfcTag MifareUltralight::read(byte * uid, unsigned int uidLength)
     uint8_t page;
     uint8_t index = 0;
     byte buffer[bufferSize];
-    for (page = ULTRALIGHT_DATA_START_PAGE; page < ULTRALIGHT_MAX_PAGE; page++)
+    for (page = ULTRALIGHT_DATA_START_PAGE; page < NTAGTYPE2_MAX_PAGE; page++)
     {
         // read the data
         success = nfc->mifareultralight_ReadPage(page, &buffer[index]);
