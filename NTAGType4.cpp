@@ -31,7 +31,7 @@ NfcTag NTAGType4::read() {
 
   uint8_t uid[16];
   uint8_t uidLength;
-  uint8_t apdu[64];
+  uint8_t apdu[255];
   uint8_t apduLength;
 
   Serial.println("Reading..");  
@@ -105,7 +105,7 @@ bool NTAGType4::isoSelectNTAGType4Application(PN532 &nfc) {
 
   uint8_t selectCmd[13] = { 0x00, 0xA4, 0x04, 0x00, 0x07, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01, 0x00 };
   uint8_t selectCmdLen = sizeof(selectCmd);
-  uint8_t response[256];
+  uint8_t response[255];
   uint8_t responseLen = sizeof(response);
   bool success = false;
 
@@ -135,7 +135,7 @@ bool NTAGType4::isoSelectNTAGType4CCFile(PN532 &nfc) {
   // ISOSelectFile Command, Select the CC File, length Data field: 7 bytes, Datafield: E1 03 (Application)
   uint8_t selectCmd[7] = { 0x00, 0xA4, 0x00, 0x0C, 0x02, 0xE1, 0x03 };
   uint8_t selectCmdLen = sizeof(selectCmd);
-  uint8_t response[256];
+  uint8_t response[255];
   uint8_t responseLen = sizeof(response);
   bool success = false;
 
@@ -164,7 +164,7 @@ bool NTAGType4::isoReadNTAGType4CCFile(PN532 &nfc) {
   // ISOReadBinary command, Command, offset 0, target currently selected file, read until 0F (15 bytes)
   uint8_t selectCmd[5] = { 0x00, 0xB0, 0x00, 0x00, 0x0F };
   uint8_t selectCmdLen = sizeof(selectCmd);
-  uint8_t response[256];
+  uint8_t response[255];
   uint8_t responseLen = sizeof(response);
   bool success = false;
 
@@ -188,7 +188,7 @@ bool NTAGType4::isoSelectNTAGType4NdefFile(PN532 &nfc) {
   // ISOSelectFile command, select (MF, DF, EF) by identifier, No response data: no FCI should be returned, length Data field: 2 bytes, DataField: E1 04 (File ID for NDEF message, Length of expected response : 00 (no response data expected)
   uint8_t selectCmd[7] = { 0x00, 0xA4, 0x00, 0x0C, 0x02, 0xE1, 0x04 };
   uint8_t selectCmdLen = sizeof(selectCmd);
-  uint8_t response[256];
+  uint8_t response[255];
   uint8_t responseLen = sizeof(response);
   bool success = false;
 
@@ -218,7 +218,7 @@ bool NTAGType4::isoReadNTAGType4NdefLength(PN532 &nfc, uint8_t *ndefFileLength) 
   // ISOReadBinary command, offset 0, target currently selected file, length file 2 bytes (this indicates read the length of the NDEF File)
   uint8_t selectCmd[5] = { 0x00, 0xB0, 0x00, 0x00, 0x02 };
   uint8_t selectCmdLen = sizeof(selectCmd);
-  uint8_t response[256];
+  uint8_t response[255];
   uint8_t responseLen = sizeof(response);
   bool success = false;
 
@@ -251,7 +251,7 @@ NdefMessage NTAGType4::isoReadNTAGType4NdefFile(PN532 &nfc, uint8_t ndefFileLeng
   // ISOReadBinary command, target currently selected file, offset is read starting from byte 2, length 0x4E is read read 3 bytes from the NDEF File
   uint8_t selectCmd[5] = { 0x00, 0xB0, 0x00, 0x02, ndefFileLength };
   uint8_t selectCmdLen = sizeof(selectCmd);
-  uint8_t response[256];
+  uint8_t response[255];
   uint8_t responseLen = sizeof(response);
   bool success = false;
 
