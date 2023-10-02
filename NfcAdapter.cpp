@@ -9,7 +9,6 @@ NfcAdapter::NfcAdapter(PN532Interface &interface)
 NfcAdapter::~NfcAdapter(void)
 {
     delete shield;
-    delete tag;
 }
 
 void NfcAdapter::begin(boolean verbose)
