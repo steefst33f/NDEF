@@ -7,11 +7,10 @@
 /**************************************************************************/
 
 #include "ISO14443aTag.h"
-#include "PN532_debug.h"
+
+#define PRINT_HEX(num)       Serial.print(' '); Serial.print((num>>4)&0x0F, HEX); Serial.print(num&0x0F, HEX)
 
 void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
-    Serial.println(__FUNCTION__);
-
     if (apduLength < 6) {
         Serial.println("Couldn't parse ISO14443a Tag info from APDU");
         return;
@@ -22,15 +21,23 @@ void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
     sensRes <<= 8;
     sensRes |= apdu[3];
     selRes = apdu[4];
+    
     nfcIdLength = apdu[5];
     nfcId = new uint8_t[nfcIdLength];
-
+    if (adpuLength < (5 + nfcIdLength + 1)) { 
+      Serial.println("Couldn't parse ISO14443a Tag info from APDU");
+      return;
+    }
     for (uint8_t i = 0; i < nfcIdLength; i++) {
         nfcId[i] = apdu[6 + i];
     }
 
     atsLength = apdu[5 + nfcIdLength + 1];
     ats = new uint8_t[atsLength];
+    if (adpuLength < (5 + nfcIdLength + 1 + atsLength)) { 
+      Serial.println("Couldn't parse ISO14443a Tag info from APDU");
+      return;
+    }
     for (uint8_t i = 0; i < atsLength; i++) {
         ats[i] = apdu[6 + nfcIdLength + 1 + i];
     }
@@ -39,8 +46,6 @@ void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
 }
 
 ISO14443aTag::Type ISO14443aTag::guessTagType() {
-    Serial.println(__FUNCTION__);
-
     if (isMifareClassic()) {
         return ISO14443aTag::Type::MifareClassic;
     } 
@@ -60,6 +65,7 @@ bool ISO14443aTag::isMifareClassic() {
 // (ATQA 0x4 && SAK 0x8) || (ATQA 0x44 && SAK 0x8) - Mifare Classic
   if (sensRes == 0x44 | sensRes == 0x40) {
     if(selRes == 0x80) {
+      Serial.println("Mifare Classic Tag detected!");
       return true;
     }
   }
@@ -69,6 +75,7 @@ bool ISO14443aTag::isMifareClassic() {
 
 bool ISO14443aTag::isType2() {
   if (sensRes == 0x44 && selRes == 0x0) {
+    Serial.println("Type 2 Tag detected!");
     return true;
   }
 
@@ -94,21 +101,25 @@ void ISO14443aTag::print() {
     Serial.println("-------------------------------------------------------");
     Serial.println("");
     
-    Serial.print("tagNumber ="); DMSG_HEX(tagNumber); Serial.println("");
-    Serial.print("sensRes ="); DMSG_HEX(sensRes); Serial.println("");
-    Serial.print("selRes ="); DMSG_HEX(selRes); Serial.println("");
-    Serial.print("nfcIdLength ="); DMSG_HEX(nfcIdLength); Serial.println("");
+    Serial.print("tagNumber ="); PRINT_HEX(tagNumber); Serial.println("");
+    Serial.print("sensRes ="); PRINT_HEX(sensRes); Serial.println("");
+    Serial.print("selRes ="); PRINT_HEX(selRes); Serial.println("");
+    Serial.print("nfcIdLength ="); PRINT_HEX(nfcIdLength); Serial.println("");
     
-    Serial.print("nfcId =");
-    for (int i = 0; i < nfcIdLength; i++) {
-        DMSG_HEX(nfcId[i]);
+    if (nfcId != nullptr) {
+      Serial.print("nfcId =");
+      for (int i = 0; i < nfcIdLength; i++) {
+          PRINT_HEX(nfcId[i]);
+      }
     }
     
-    Serial.println("");
-    Serial.print("atsLength = "); DMSG_HEX(atsLength); Serial.println("");
-    Serial.print("ats = ");
-    for (int i = 0; i < nfcIdLength; i++) {
-        DMSG_HEX(ats[i]);
+    if (ats != nullptr) {
+      Serial.println("");
+      Serial.print("atsLength = "); PRINT_HEX(atsLength); Serial.println("");
+      Serial.print("ats = ");
+      for (int i = 0; i < nfcIdLength; i++) {
+        PRINT_HEX(ats[i]);
+      }
     }
     
     Serial.println("");

@@ -43,8 +43,12 @@ struct ISO14443aTag {
     }
 
     ~ISO14443aTag() {
-        delete nfcId;
-        delete ats;
+        if (nfcId != nullptr) {
+            delete nfcId;
+        }
+        if (ats != nullptr) {
+            delete ats;
+        }
     }
 
     void parseISO14443aTag(uint8_t *apdu, uint8_t apduLength);
