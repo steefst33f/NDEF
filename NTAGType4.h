@@ -10,7 +10,8 @@
     #define __NTAGTYPE4_H__
 
     #include <PN532.h>
-    #include <NfcTag.h>
+    #include "NfcTag.h"
+    #include "NdefMessage.h"
 
     #define NFC_FORUM_TAG_TYPE_4 ("NFC Forum Type 4")
 
@@ -24,7 +25,7 @@
             bool isoSelectFile(uint8_t p1, uint8_t p2, uint8_t lc, uint8_t *data, uint8_t *rAdpu, uint8_t *rAdpuLength);
             bool isoSelectFileNDEF(uint8_t *rAdpu, uint8_t *rAdpuLength); //TODO: replace with below
             bool isoReadBinary(uint8_t *rAdpu, uint8_t *rAdpuLength);
-            NfcTag read();
+            NfcTag read(byte *uid, unsigned int uidLength);
 
         private:
             PN532 *_nfcModule;
