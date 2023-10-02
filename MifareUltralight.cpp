@@ -1,4 +1,4 @@
-#include <MifareUltralight.h>
+#include "MifareUltralight.h"
 
 #define ULTRALIGHT_PAGE_SIZE 4
 #define ULTRALIGHT_READ_SIZE 4 // we should be able to read 16 bytes at a time
@@ -7,7 +7,9 @@
 #define ULTRALIGHT_MESSAGE_LENGTH_INDEX 1
 #define ULTRALIGHT_DATA_START_INDEX 2
 #define ULTRALIGHT_MAX_PAGE 63
+#define NTAGTYPE2_DATA_STOP_PAGE 225
 #define NTAGTYPE2_MAX_PAGE 231
+
 
 #define NFC_FORUM_TAG_TYPE_2 ("NFC Forum Type 2")
 
@@ -77,7 +79,6 @@ NfcTag MifareUltralight::read(byte * uid, unsigned int uidLength)
 
     NdefMessage ndefMessage = NdefMessage(&buffer[ndefStartIndex], messageLength);
     return NfcTag(uid, uidLength, NFC_FORUM_TAG_TYPE_2, ndefMessage);
-
 }
 
 boolean MifareUltralight::isUnformatted()
