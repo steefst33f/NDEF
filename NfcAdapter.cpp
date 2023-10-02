@@ -52,7 +52,6 @@ boolean NfcAdapter::tagPresent(unsigned long timeout)
     if (success) {
         tag.parseISO14443aTag(_apdu, _apduLength);
     } else {
-        delete tag;
         tag = ISO14443aTag();
     }
     
