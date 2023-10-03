@@ -33,17 +33,26 @@ NdefMessage::NdefMessage(const byte * data, const int numBytes)
         NdefRecord record = NdefRecord();
         record.setTnf(tnf);
 
+        if (index + 1 > numBytes) {
+                break;  //data corrupted 
+        }
         index++;
         int typeLength = data[index];
 
         uint32_t payloadLength = 0;
         if (sr)
         {
+            if (index + 1 > numBytes) {
+                break;  //data corrupted 
+            }
             index++;
             payloadLength = data[index];
         }
         else
         {
+            if (index + 4 > numBytes) {
+                break;  //data corrupted 
+            }
             payloadLength =
                   (static_cast<uint32_t>(data[index])   << 24)
                 | (static_cast<uint32_t>(data[index+1]) << 16)
@@ -55,20 +64,36 @@ NdefMessage::NdefMessage(const byte * data, const int numBytes)
         int idLength = 0;
         if (il)
         {
+            if (index + 1 > numBytes) {
+                break;  //data corrupted 
+            }
             index++;
             idLength = data[index];
         }
 
+        if (index + 1 > numBytes) {
+            break;  //data corrupted 
+        }
         index++;
         record.setType(&data[index], typeLength);
+
+        if (index + typeLength > numBytes) {
+            break;  //data corrupted 
+        }
         index += typeLength;
 
         if (il)
         {
             record.setId(&data[index], idLength);
+            if (index + idLength > numBytes) {
+                break;  //data corrupted 
+            }
             index += idLength;
         }
-
+        
+        if (index + 1 > payloadLength) {
+            break;  //data corrupted 
+        }
         record.setPayload(&data[index], payloadLength);
         index += payloadLength;
 
