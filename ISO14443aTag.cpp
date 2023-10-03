@@ -51,7 +51,6 @@ void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
   }
 }
 
-
 ISO14443aTag::Type ISO14443aTag::guessTagType() {
     if (isMifareClassic()) {
         return ISO14443aTag::Type::MifareClassic;

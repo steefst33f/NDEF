@@ -10,7 +10,6 @@
 #define NTAGTYPE2_DATA_STOP_PAGE 225
 #define NTAGTYPE2_MAX_PAGE 231
 
-
 #define NFC_FORUM_TAG_TYPE_2 ("NFC Forum Type 2")
 
 MifareUltralight::MifareUltralight(PN532& nfcShield)
@@ -37,7 +36,6 @@ NfcTag MifareUltralight::read(byte * uid, unsigned int uidLength)
     readCapabilityContainer(); // meta info for tag
     findNdefMessage();
     calculateBufferSize();
-
     if (messageLength == 0) { // data is 0x44 0x03 0x00 0xFE
         NdefMessage message = NdefMessage();
         message.addEmptyRecord();
