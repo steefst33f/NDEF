@@ -11,27 +11,31 @@
 #define PRINT_HEX(num)       Serial.print(' '); Serial.print((num>>4)&0x0F, HEX); Serial.print(num&0x0F, HEX)
 
 void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
-    if (apduLength < 6) {
-        Serial.println("Couldn't parse ISO14443a Tag info from APDU");
-        return;
-    }
-
-    tagNumber = apdu[0];
-    sensRes = apdu[2];
-    sensRes <<= 8;
-    sensRes |= apdu[3];
-    selRes = apdu[4];
-    
-    nfcIdLength = apdu[5];
-    nfcId = new uint8_t[nfcIdLength];
-    if (apduLength < (5 + nfcIdLength + 1)) { 
+  if (apduLength < 6) {
       Serial.println("Couldn't parse ISO14443a Tag info from APDU");
       return;
-    }
-    for (uint8_t i = 0; i < nfcIdLength; i++) {
-        nfcId[i] = apdu[6 + i];
-    }
+  }
 
+  tagNumber = apdu[0];
+  sensRes = apdu[2];
+  sensRes <<= 8;
+  sensRes |= apdu[3];
+  selRes = apdu[4];
+  
+  nfcIdLength = apdu[5];
+  nfcId = new uint8_t[nfcIdLength];
+  if (apduLength < (5 + nfcIdLength + 1)) { 
+    Serial.println("Couldn't parse ISO14443a Tag info from APDU");
+    return;
+  }
+  for (uint8_t i = 0; i < nfcIdLength; i++) {
+      nfcId[i] = apdu[6 + i];
+  }
+
+  type = guessTagType();
+
+  //Set ATS (only implemented for Type 4 now)
+  if (type == ISO14443aTag::Type::Type4) {
     atsLength = apdu[5 + nfcIdLength + 1];
     ats = new uint8_t[atsLength];
     if (apduLength < (5 + nfcIdLength + 1 + atsLength)) { 
@@ -39,11 +43,14 @@ void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
       return;
     }
     for (uint8_t i = 0; i < atsLength; i++) {
-        ats[i] = apdu[6 + nfcIdLength + 1 + i];
+      ats[i] = apdu[6 + nfcIdLength + 1 + i];
     }
-
-    type = guessTagType();
+  } else {
+    ats = nullptr;
+    atsLength = 0;
+  }
 }
+
 
 ISO14443aTag::Type ISO14443aTag::guessTagType() {
     if (isMifareClassic()) {
