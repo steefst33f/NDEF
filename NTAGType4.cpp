@@ -19,51 +19,38 @@ NTAGType4::~NTAGType4()
 }
 
 NfcTag NTAGType4::read(byte *uid, unsigned int uidLength) {
-  if (!_nfcModule->inListPassiveTarget()) {
-    Serial.println("*****************-done with card-****************");  
-    return emptyTag(uid, uidLength);
-  }
+  //Type4 Read Steps: 
+  // 1) inListPassiveTarget (already done at card detecting, so no need to do this here)
+  // 2) isoSelectNTAGType4Application
+  // 3) isoSelectNTAGType4CCFile
+  // 4) isoReadNTAGType4CCFile
+  // 5) isoSelectNTAGType4NdefFile
+  // 6) isoReadNTAGType4NdefLength
+  // 7) isoReadNTAGType4NdefFile
 
   if (!isoSelectNTAGType4Application(*_nfcModule)) {
-    Serial.println("*****************-done with card-****************");  
     return emptyTag(uid, uidLength);
   }
-
-  Serial.println("---------------------------------------------");
 
   if (!isoSelectNTAGType4CCFile(*_nfcModule)) {
-    Serial.println("*****************-done with card-****************");  
     return emptyTag(uid, uidLength);
   }
-
-  Serial.println("---------------------------------------------");
 
   if (!isoReadNTAGType4CCFile(*_nfcModule)) {
-    Serial.println("*****************-done with card-****************");  
     return emptyTag(uid, uidLength);
   }
-
-  Serial.println("---------------------------------------------");
 
   if (!isoSelectNTAGType4NdefFile(*_nfcModule)) {
-    Serial.println("*****************-done with card-****************");  
     return emptyTag(uid, uidLength);
   }
-
-  Serial.println("---------------------------------------------");
 
   uint8_t ndefFileLenght;
   if (!isoReadNTAGType4NdefLength(*_nfcModule, &ndefFileLenght)) {
-    Serial.println("*****************-done with card-****************");  
     return emptyTag(uid, uidLength);
   }
 
-  Serial.println("---------------------------------------------");
-
   NdefMessage ndefMessage = isoReadNTAGType4NdefFile(*_nfcModule, ndefFileLenght);
   return NfcTag(uid, uidLength, NFC_FORUM_TAG_TYPE_4, ndefMessage);
-
-  Serial.println("*****************-done with card-****************");  
 }
 
 NfcTag NTAGType4::emptyTag(uint8_t *uid, uint8_t uidLength) {
