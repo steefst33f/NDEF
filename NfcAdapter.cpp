@@ -40,15 +40,8 @@ void NfcAdapter::begin(boolean verbose)
 boolean NfcAdapter::tagPresent(unsigned long timeout)
 {
     uint8_t success;
+    success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout, true);
 
-    if (timeout == 0)
-    {
-        success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength);
-    }
-    else
-    {
-        success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout);
-    }
     if (success) {
         tag.parseISO14443aTag(_apdu, _apduLength);
     } else {
@@ -56,6 +49,22 @@ boolean NfcAdapter::tagPresent(unsigned long timeout)
     }
     
     return success;
+}
+
+boolean NfcAdapter::releaseTag()
+{
+    bool success = shield->inRelease();
+    if (success) {
+        tag = ISO14443aTag();
+        #ifdef NDEF_USE_SERIAL
+            Serial.printf("Released tag(s)");
+        #endif
+    } else {
+        #ifdef NDEF_USE_SERIAL
+            Serial.printf("Failed to release tag(s)");
+        #endif
+    }
+    return success; 
 }
 
 boolean NfcAdapter::erase()

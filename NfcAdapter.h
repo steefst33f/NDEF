@@ -36,13 +36,13 @@ class NfcAdapter {
         boolean format();
         // reset tag back to factory state
         boolean clean();
+        // release all tag(s) (So we clear all stored data and can scan an other one)
+        boolean releaseTag();
     private:
         PN532* shield;
         ISO14443aTag tag;
-        // byte uid[16];  // Buffer to store the returned UID
-        // unsigned int uidLength; // Length of the UID (4 or 7 bytes depending on ISO14443A card type)
 
-        uint8_t _uid[16];
+        uint8_t _uid[7];
         uint8_t _uidLength;
         uint8_t _apdu[64];
         uint8_t _apduLength;
