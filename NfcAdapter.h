@@ -26,7 +26,9 @@ class NfcAdapter {
         NfcAdapter(PN532Interface &interface);
 
         ~NfcAdapter(void);
-        void begin(boolean verbose=true);
+        bool begin(boolean verbose=true);
+        boolean isTagPresent(unsigned long timeout=0);
+        bool identifyTag();
         boolean tagPresent(unsigned long timeout=0); // tagAvailable
         NfcTag read();
         boolean write(NdefMessage& ndefMessage);
@@ -38,9 +40,12 @@ class NfcAdapter {
         boolean clean();
         // release all tag(s) (So we clear all stored data and can scan an other one)
         boolean releaseTag();
+
+        // Get info of the inlisted tag
+        ISO14443aTag getInlistedTag();
     private:
         PN532* shield;
-        ISO14443aTag tag;
+        ISO14443aTag _tag;
 
         uint8_t _uid[7];
         uint8_t _uidLength;
