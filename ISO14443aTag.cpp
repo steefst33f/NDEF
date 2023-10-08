@@ -10,10 +10,10 @@
 
 #define PRINT_HEX(num)       Serial.print(' '); Serial.print((num>>4)&0x0F, HEX); Serial.print(num&0x0F, HEX)
 
-void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
+bool ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
   if (apduLength < 6) {
       Serial.println("Couldn't parse ISO14443a Tag info from APDU");
-      return;
+      return false;
   }
 
   tagNumber = apdu[0];
@@ -26,7 +26,7 @@ void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
   nfcId = new uint8_t[nfcIdLength];
   if (apduLength < (5 + nfcIdLength + 1)) { 
     Serial.println("Couldn't parse ISO14443a Tag info from APDU");
-    return;
+    return false;
   }
   for (uint8_t i = 0; i < nfcIdLength; i++) {
       nfcId[i] = apdu[6 + i];
@@ -40,7 +40,7 @@ void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
     ats = new uint8_t[atsLength];
     if (apduLength < (5 + nfcIdLength + 1 + atsLength)) { 
       Serial.println("Couldn't parse ISO14443a Tag info from APDU");
-      return;
+      return false;
     }
     for (uint8_t i = 0; i < atsLength; i++) {
       ats[i] = apdu[6 + nfcIdLength + 1 + i];
@@ -49,6 +49,7 @@ void ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
     ats = nullptr;
     atsLength = 0;
   }
+  return true;
 }
 
 ISO14443aTag::Type ISO14443aTag::guessTagType() {

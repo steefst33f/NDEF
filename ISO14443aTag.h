@@ -51,7 +51,7 @@ struct ISO14443aTag {
         }
     }
 
-    void parseISO14443aTag(uint8_t *apdu, uint8_t apduLength);
+    bool parseISO14443aTag(uint8_t *apdu, uint8_t apduLength);
     Type guessTagType();
     void print();
 
