@@ -35,6 +35,7 @@ bool NfcAdapter::begin(boolean verbose)
     }
     // configure board to read RFID tags
     shield->SAMConfig();
+    shield->powerDownMode();
 
     return true;
 }
@@ -44,10 +45,13 @@ boolean NfcAdapter::isTagPresent(unsigned long timeout)
     return shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout, true);
 }
 
+boolean NfcAdapter::powerDownMode() {
+    return shield->powerDownMode();
+}
+
 bool NfcAdapter::identifyTag() {
     return _tag.parseISO14443aTag(_apdu, _apduLength);
 }
-
 
 boolean NfcAdapter::tagPresent(unsigned long timeout)
 {
