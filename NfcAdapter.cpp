@@ -35,7 +35,6 @@ bool NfcAdapter::begin(boolean verbose)
     }
     // configure board to read RFID tags
     shield->SAMConfig();
-    shield->powerDownMode();
 
     return true;
 }
