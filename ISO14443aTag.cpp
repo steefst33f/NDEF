@@ -39,11 +39,20 @@ bool ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
     atsLength = apdu[5 + nfcIdLength + 1];
     ats = new uint8_t[atsLength];
     if (apduLength < (5 + nfcIdLength + 1 + atsLength)) { 
-      Serial.println("Couldn't parse ISO14443a Tag info from APDU");
-      return false;
+      #ifdef DEBUG_SERIAL
+      DEBUG_SERIAL.println("NO ATS info available to parse");
+      #endif
+      return true;
     }
+    
+    #ifdef DEBUG_SERIAL
+    DEBUG_SERIAL.println("atsLength: " + String(atsLength) + "ats: ");
+    #endif
     for (uint8_t i = 0; i < atsLength; i++) {
       ats[i] = apdu[6 + nfcIdLength + 1 + i];
+      #ifdef DEBUG_SERIAL
+      DEBUG_SERIAL.print(ats[i], HEX);
+      #endif
     }
   } else {
     ats = nullptr;
