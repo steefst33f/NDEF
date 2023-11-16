@@ -1,26 +1,20 @@
 #include "NfcAdapter.h"
 
-#define PN532_SCK  (25)
-#define PN532_MISO (27)
-#define PN532_MOSI (26)
-#define PN532_SS   (33)
-
-NfcAdapter::NfcAdapter()
+NfcAdapter::NfcAdapter(Adafruit_PN532* nfcModule)
 {
-    shield = new Adafruit_PN532(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+    _nfcModule = nfcModule;
     _tag = ISO14443aTag();
 }
 
 NfcAdapter::~NfcAdapter(void)
 {
-    delete shield;
 }
 
 bool NfcAdapter::begin(boolean verbose)
 {
-    shield->begin();
+    _nfcModule->begin();
 
-    uint32_t versiondata = shield->getFirmwareVersion();
+    uint32_t versiondata = _nfcModule->getFirmwareVersion();
 
     if (! versiondata)
     {
@@ -39,14 +33,14 @@ bool NfcAdapter::begin(boolean verbose)
     #endif
     }
     // configure board to read RFID tags
-    shield->SAMConfig();
+    _nfcModule->SAMConfig();
 
     return true;
 }
 
 boolean NfcAdapter::isTagPresent(unsigned long timeout)
 {
-    return shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout, true);
+    return _nfcModule->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout, true);
 }
 
 boolean NfcAdapter::powerDownMode() {
@@ -60,7 +54,7 @@ bool NfcAdapter::identifyTag() {
 boolean NfcAdapter::tagPresent(unsigned long timeout)
 {
     uint8_t success;
-    success = shield->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout, true);
+    success = _nfcModule->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout, true);
 
     if (success) {
         _tag.parseISO14443aTag(_apdu, _apduLength);
@@ -73,7 +67,7 @@ boolean NfcAdapter::tagPresent(unsigned long timeout)
 
 void NfcAdapter::releaseTag()
 {
-    shield->inRelease(); //releases all the listed tags from the nfc modules memory and puts it in low Vbat mode and turns off the RF!
+    _nfcModule->inRelease(); //releases all the listed tags from the nfc modules memory and puts it in low Vbat mode and turns off the RF!
     _tag = ISO14443aTag();
     #ifdef NDEF_USE_SERIAL
         Serial.printf("Released tag(s)");
@@ -93,7 +87,7 @@ boolean NfcAdapter::format()
     #ifdef NDEF_SUPPORT_MIFARE_CLASSIC
     if (_tag.type == ISO14443aTag::Type::MifareClassic)
     {
-        MifareClassic mifareClassic = MifareClassic(*shield);
+        MifareClassic mifareClassic = MifareClassic(*_nfcModule);
         success = mifareClassic.formatNDEF(_uid, _uidLength);
     }
     else
@@ -115,7 +109,7 @@ boolean NfcAdapter::clean()
         #ifdef NDEF_DEBUG
         Serial.println(F("Cleaning Mifare Classic"));
         #endif
-        MifareClassic mifareClassic = MifareClassic(*shield);
+        MifareClassic mifareClassic = MifareClassic(*_nfcModule);
         return mifareClassic.formatMifare(_uid, _uidLength);
     }
     else
@@ -125,7 +119,7 @@ boolean NfcAdapter::clean()
         #ifdef NDEF_DEBUG
         Serial.println(F("Cleaning Mifare Ultralight"));
         #endif
-        MifareUltralight ultralight = MifareUltralight(*shield);
+        MifareUltralight ultralight = MifareUltralight(*_nfcModule);
         return ultralight.clean();
     }
     else
@@ -145,7 +139,7 @@ NfcTag NfcAdapter::read()
         #ifdef NDEF_DEBUG
         Serial.println(F("Reading Mifare Classic"));
         #endif
-        MifareClassic mifareClassic = MifareClassic(*shield);
+        MifareClassic mifareClassic = MifareClassic(*_nfcModule);
         return mifareClassic.read(_uid, _uidLength);
     }
     else
@@ -155,7 +149,7 @@ NfcTag NfcAdapter::read()
         #ifdef NDEF_DEBUG
         Serial.println(F("Reading Mifare Ultralight"));
         #endif
-        MifareUltralight ultralight = MifareUltralight(*shield);
+        MifareUltralight ultralight = MifareUltralight(*_nfcModule);
         return ultralight.read(_uid, _uidLength);
     }
     else if (_tag.type == ISO14443aTag::Type::Type4)
@@ -163,7 +157,7 @@ NfcTag NfcAdapter::read()
         #ifdef NDEF_DEBUG
         Serial.print(F("Reading NTAG424"));
             #endif
-        NTAGType4 ntag424 = NTAGType4(*shield);
+        NTAGType4 ntag424 = NTAGType4(*_nfcModule);
         return ntag424.read(_uid, _uidLength);
     }
     else if (_tag.type == ISO14443aTag::Type::Unknown)
@@ -192,7 +186,7 @@ boolean NfcAdapter::write(NdefMessage& ndefMessage)
         #ifdef NDEF_DEBUG
         Serial.println(F("Writing Mifare Classic"));
         #endif
-        MifareClassic mifareClassic = MifareClassic(*shield);
+        MifareClassic mifareClassic = MifareClassic(*_nfcModule);
         success = mifareClassic.write(ndefMessage, _uid, _uidLength);
     }
     else
@@ -202,7 +196,7 @@ boolean NfcAdapter::write(NdefMessage& ndefMessage)
         #ifdef NDEF_DEBUG
         Serial.println(F("Writing Mifare Ultralight"));
         #endif
-        MifareUltralight mifareUltralight = MifareUltralight(*shield);
+        MifareUltralight mifareUltralight = MifareUltralight(*_nfcModule);
         success = mifareUltralight.write(ndefMessage, _uid, _uidLength);
     }
     else if (_tag.type == ISO14443aTag::Type::Unknown)

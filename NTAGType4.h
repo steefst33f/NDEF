@@ -9,7 +9,8 @@
 #ifndef __NTAGTYPE4_H__
     #define __NTAGTYPE4_H__
 
-    #include <PN532.h>
+    // #include <PN532.h>
+    #include <Adafruit_PN532.h>
     #include "NfcTag.h"
     #include "NdefMessage.h"
 
@@ -18,7 +19,7 @@
     class NTAGType4 {
 
         public:
-            NTAGType4(PN532 &nfcModule);
+            NTAGType4(Adafruit_PN532 &nfcModule);
             ~NTAGType4();
 
             // NTAGType4 command functions
@@ -28,14 +29,14 @@
             NfcTag read(byte *uid, unsigned int uidLength);
 
         private:
-            PN532 *_nfcModule;
+            Adafruit_PN532 *_nfcModule;
 
-            bool isoSelectNTAGType4Application(PN532 &nfc);
-            bool isoSelectNTAGType4CCFile(PN532 &nfc);
-            bool isoReadNTAGType4CCFile(PN532 &nfc);
-            bool isoSelectNTAGType4NdefFile(PN532 &nfc);
-            bool isoReadNTAGType4NdefLength(PN532 &nfc, uint8_t *ndefFileLength);
-            NdefMessage isoReadNTAGType4NdefFile(PN532 &nfc, uint8_t ndefFileLength);
+            bool isoSelectNTAGType4Application(Adafruit_PN532 &nfc);
+            bool isoSelectNTAGType4CCFile(Adafruit_PN532 &nfc);
+            bool isoReadNTAGType4CCFile(Adafruit_PN532 &nfc);
+            bool isoSelectNTAGType4NdefFile(Adafruit_PN532 &nfc);
+            bool isoReadNTAGType4NdefLength(Adafruit_PN532 &nfc, uint8_t *ndefFileLength);
+            NdefMessage isoReadNTAGType4NdefFile(Adafruit_PN532 &nfc, uint8_t ndefFileLength);
 
             NfcTag emptyTag(uint8_t *uid, uint8_t uidLength);
 
