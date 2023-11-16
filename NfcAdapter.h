@@ -1,7 +1,7 @@
 #ifndef NfcAdapter_h
 #define NfcAdapter_h
 
-#include <PN532.h>
+#include <Adafruit_PN532.h>
 #include "NfcTag.h"
 #include "Ndef.h"
 
@@ -23,7 +23,7 @@
 
 class NfcAdapter {
     public:
-        NfcAdapter(PN532Interface &interface);
+        NfcAdapter(Adafruit_PN532* nfcModule);
 
         ~NfcAdapter(void);
         bool begin(boolean verbose=true);
@@ -39,13 +39,13 @@ class NfcAdapter {
         boolean format();
         // reset tag back to factory state
         boolean clean();
-        // release all tag(s) (So we clear all stored data and can scan an other one)
-        boolean releaseTag();
+        // release all tag(s) (So we clear all stored data and can scan an other one) Also puts the nfc module in low Vbat mode and turns off the RF!
+        void releaseTag();
 
         // Get info of the inlisted tag
         ISO14443aTag getInlistedTag();
     private:
-        PN532* shield;
+        Adafruit_PN532* _nfcModule = nullptr;
         ISO14443aTag _tag;
 
         uint8_t _uid[7];

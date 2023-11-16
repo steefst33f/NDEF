@@ -1,8 +1,13 @@
 #include "NfcAdapter.h"
 
-NfcAdapter::NfcAdapter(PN532Interface &interface)
+#define PN532_SCK  (25)
+#define PN532_MISO (27)
+#define PN532_MOSI (26)
+#define PN532_SS   (33)
+
+NfcAdapter::NfcAdapter()
 {
-    shield = new PN532(interface);
+    shield = new Adafruit_PN532(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
     _tag = ISO14443aTag();
 }
 
@@ -45,7 +50,7 @@ boolean NfcAdapter::isTagPresent(unsigned long timeout)
 }
 
 boolean NfcAdapter::powerDownMode() {
-    return shield->powerDownMode();
+    // return shield->powerDownMode();
 }
 
 bool NfcAdapter::identifyTag() {
@@ -66,20 +71,13 @@ boolean NfcAdapter::tagPresent(unsigned long timeout)
     return success;
 }
 
-boolean NfcAdapter::releaseTag()
+void NfcAdapter::releaseTag()
 {
-    bool success = shield->inRelease();
-    if (success) {
-        _tag = ISO14443aTag();
-        #ifdef NDEF_USE_SERIAL
-            Serial.printf("Released tag(s)");
-        #endif
-    } else {
-        #ifdef NDEF_USE_SERIAL
-            Serial.printf("Failed to release tag(s)");
-        #endif
-    }
-    return success; 
+    shield->inRelease(); //releases all the listed tags from the nfc modules memory and puts it in low Vbat mode and turns off the RF!
+    _tag = ISO14443aTag();
+    #ifdef NDEF_USE_SERIAL
+        Serial.printf("Released tag(s)");
+    #endif
 }
 
 boolean NfcAdapter::erase()
