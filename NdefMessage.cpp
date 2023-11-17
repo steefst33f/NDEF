@@ -288,9 +288,10 @@ NdefRecord NdefMessage::operator[](int index)
     return getRecord(index);
 }
 
-#ifdef NDEF_USE_SERIAL
 void NdefMessage::print()
 {
+    #ifdef NDEF_USE_SERIAL
+
     Serial.print(F("\nNDEF Message "));Serial.print(_recordCount);Serial.print(F(" record"));
     _recordCount == 1 ? Serial.print(", ") : Serial.print("s, ");
     Serial.print(getEncodedSize());Serial.println(F(" bytes"));
@@ -299,5 +300,5 @@ void NdefMessage::print()
     {
          _records[i].print();
     }
+    #endif
 }
-#endif
