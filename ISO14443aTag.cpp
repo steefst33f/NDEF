@@ -12,7 +12,9 @@
 
 bool ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
   if (apduLength < 6) {
+      #ifdef NDEF_USE_SERIAL
       Serial.println("Couldn't parse ISO14443a Tag info from APDU");
+      #endif
       return false;
   }
 
@@ -25,7 +27,9 @@ bool ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
   nfcIdLength = apdu[5];
   nfcId = new uint8_t[nfcIdLength];
   if (apduLength < (5 + nfcIdLength + 1)) { 
+    #ifdef NDEF_USE_SERIAL
     Serial.println("Couldn't parse ISO14443a Tag info from APDU");
+    #endif
     return false;
   }
   for (uint8_t i = 0; i < nfcIdLength; i++) {
@@ -39,19 +43,19 @@ bool ISO14443aTag::parseISO14443aTag(uint8_t *apdu, uint8_t apduLength) {
     atsLength = apdu[5 + nfcIdLength + 1];
     ats = new uint8_t[atsLength];
     if (apduLength < (5 + nfcIdLength + 1 + atsLength)) { 
-      #ifdef DEBUG_SERIAL
-      DEBUG_SERIAL.println("NO ATS info available to parse");
+      #ifdef NDEF_USE_SERIAL
+      Serial.println("NO ATS info available to parse");
       #endif
       return true;
     }
     
-    #ifdef DEBUG_SERIAL
-    DEBUG_SERIAL.println("atsLength: " + String(atsLength) + "ats: ");
+    #ifdef NDEF_USE_SERIAL
+    Serial.println("atsLength: " + String(atsLength) + "ats: ");
     #endif
     for (uint8_t i = 0; i < atsLength; i++) {
       ats[i] = apdu[6 + nfcIdLength + 1 + i];
-      #ifdef DEBUG_SERIAL
-      DEBUG_SERIAL.print(ats[i], HEX);
+      #ifdef NDEF_USE_SERIAL
+      Serial.print(ats[i], HEX);
       #endif
     }
   } else {
@@ -81,7 +85,9 @@ bool ISO14443aTag::isMifareClassic() {
 // (ATQA 0x4 && SAK 0x8) || (ATQA 0x44 && SAK 0x8) - Mifare Classic
   if (sensRes == 0x44 | sensRes == 0x40) {
     if(selRes == 0x80) {
+      #ifdef NDEF_USE_SERIAL
       Serial.println("Mifare Classic Tag detected!");
+      #endif
       return true;
     }
   }
@@ -91,7 +97,9 @@ bool ISO14443aTag::isMifareClassic() {
 
 bool ISO14443aTag::isType2() {
   if (sensRes == 0x44 && selRes == 0x0) {
+    #ifdef NDEF_USE_SERIAL
     Serial.println("Type 2 Tag detected!");
+    #endif
     return true;
   }
 
@@ -103,17 +111,22 @@ bool ISO14443aTag::isNtagType4() {
   if (sensRes == 0x0344 | sensRes == 0x0304) {
     if(selRes == 0x20) {
       if (nfcId[0] == 0x04) {
+        #ifdef NDEF_USE_SERIAL
         Serial.println("NTAG Type 4 detected!");
+        #endif
         return true;
       }
     }
   }
 
+  #ifdef NDEF_USE_SERIAL
   Serial.println("No NTAG Type 4 found!");
+  #endif
   return false;
 }
 
 void ISO14443aTag::print() {
+    #ifdef NDEF_USE_SERIAL
     Serial.println("-------------------------------------------------------");
     Serial.println("");
     
@@ -140,4 +153,5 @@ void ISO14443aTag::print() {
     
     Serial.println("");
     Serial.println("-------------------------------------------------------");
+    #endif
 }

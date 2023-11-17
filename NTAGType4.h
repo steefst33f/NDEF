@@ -39,7 +39,6 @@
             NdefMessage isoReadNTAGType4NdefFile(Adafruit_PN532 &nfc, uint8_t ndefFileLength);
 
             NfcTag emptyTag(uint8_t *uid, uint8_t uidLength);
-
     };
 
 #endif
