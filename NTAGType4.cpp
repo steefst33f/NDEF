@@ -237,7 +237,9 @@ bool NTAGType4::isoReadNTAGType4NdefLength(Adafruit_PN532 &nfc, uint8_t *ndefFil
 #endif
 
   if (success) {
+    #ifdef NDEF_USE_SERIAL
     Serial.println("Read NTAGType4 NDEF Lenght successfully!");
+    #endif
     // Check if the response indicates success
     if (response[responseLen - 2] == 0x90 && response[responseLen - 1] == 0x00) {
       *ndefFileLength = response[responseLen - 3];
