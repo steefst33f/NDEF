@@ -43,8 +43,12 @@ boolean NfcAdapter::isTagPresent(unsigned long timeout)
     return _nfcModule->readPassiveTargetID(PN532_MIFARE_ISO14443A, _uid, &_uidLength, _apdu, &_apduLength, timeout, true);
 }
 
+void NfcAdapter::wakeUp() {
+    return _nfcModule->wakeup();
+}
+
 boolean NfcAdapter::powerDownMode() {
-    // return shield->powerDownMode();
+    // return _nfcModule->powerDownMode();
 }
 
 bool NfcAdapter::identifyTag() {

@@ -27,6 +27,7 @@ class NfcAdapter {
 
         ~NfcAdapter(void);
         bool begin(boolean verbose=true);
+        void wakeUp();
         bool powerDownMode();
         boolean isTagPresent(unsigned long timeout=0);
         bool identifyTag();
