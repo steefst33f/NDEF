@@ -7,6 +7,7 @@ NFC Data Exchange Format (NDEF) is a common data format that operates across all
 This code works with the [Adafruit NFC Shield](https://www.adafruit.com/products/789), [Seeed Studio NFC Shield v2.0](http://www.seeedstudio.com/depot/nfc-shield-v20-p-1370.html) and the [Seeed Studio NFC Shield](http://www.seeedstudio.com/depot/nfc-shield-p-916.html?cPath=73). The library supports I2C for the Adafruit shield and SPI with the Seeed shields. The Adafruit Shield can also be modified to use SPI. It should also work with the [Adafruit NFC Breakout Board](https://www.adafruit.com/products/364).
 
 ### Supports 
+ - Reading from Type 4 Tags (tested with NTAG242 DNA).
  - Reading from Mifare Classic Tags with 4 byte UIDs.
  - Writing to Mifare Classic Tags with 4 byte UIDs.
  - Reading from Mifare Ultralight tags.
@@ -15,31 +16,32 @@ This code works with the [Adafruit NFC Shield](https://www.adafruit.com/products
 
 ### Requires
 
-[Yihui Xiong's PN532 Library](https://github.com/Seeed-Studio/PN532)
+[Steefs fork of Adafruit-PN532](https://github.com/steefst33f/Adafruit-PN532.git#DON_NDEF_COMPATIBLE)
 
 ## Getting Started
 
 To use the Ndef library in your code, include the following in your sketch
 
-For the Adafruit Shield using I2C 
+For the PN532 Module using I2C 
 
-    #include <Wire.h>
-    #include <PN532_I2C.h>
-    #include <PN532.h>
+    #include <Adafruit_PN532.h>
     #include <NfcAdapter.h>
-    
-    PN532_I2C pn532_i2c(Wire);
-    NfcAdapter nfc = NfcAdapter(pn532_i2c);
+
+    #define PN532_IRQ     (2)
+    #define PN532_RESET   (3)
+    Adafruit_PN532 *nfcModule = new Adafruit_PN532(PN532_IRQ, PN532_RESET);
 
 For the Seeed Shield using SPI
 
-    #include <SPI.h>
-    #include <PN532_SPI.h>
-    #include <PN532.h>
+    #include <Adafruit_PN532.h>
     #include <NfcAdapter.h>
-    
-    PN532_SPI pn532spi(SPI, 10);
-    NfcAdapter nfc = NfcAdapter(pn532spi);
+
+    #define PN532_SCK  (25)
+    #define PN532_MISO (27)
+    #define PN532_MOSI (26)
+    #define PN532_SS   (33)
+    Adafruit_PN532 *nfcModule = new Adafruit_PN532(PN532_SCK, PN532_MISO, PN532_MOSI, PN532_SS);
+
 
 ### NfcAdapter
 
@@ -99,10 +101,6 @@ The NdefMessage object is responsible for encoding NdefMessage into bytes so it 
 ### NdefRecord
 
 A NdefRecord carries a payload and info about the payload within a NdefMessage.
-
-### Peer to Peer
-
-Peer to Peer is provided by the LLCP and SNEP support in the [Seeed Studio library](https://github.com/Seeed-Studio/PN532).  P2P requires SPI and has only been tested with the Seeed Studio shield.  Peer to Peer was tested between Arduino and Android or BlackBerry 10. (Unfortunately Windows Phone 8 did not work.) See [P2P_Send](examples/P2P_Send/P2P_Send.ino) and [P2P_Receive](examples/P2P_Receive/P2P_Receive.ino) for more info.
 
 ### Specifications
 
