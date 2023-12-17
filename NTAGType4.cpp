@@ -156,6 +156,15 @@ bool NTAGType4::isoReadNTAGType4CCFile(Adafruit_PN532 &nfc) {
 
   success = nfc.inDataExchange(selectCmd, selectCmdLen, response, &responseLen);
 #ifdef NDEF_USE_SERIAL
+  
+  // Check if the response indicates success
+  if (success && response[responseLen - 2] != 0x90 && response[responseLen - 1] != 0x00) {
+    success = false;
+    #ifdef NDEF_USE_SERIAL
+    Serial.println("No success status received from tag");
+    #endif
+  }
+
   Serial.println(F("response:"));
   Adafruit_PN532::PrintHexChar(response, responseLen);
 #endif
@@ -282,6 +291,14 @@ NdefMessage NTAGType4::isoReadNTAGType4NdefFile(Adafruit_PN532 &nfc, uint8_t nde
   Serial.println(F("response:"));
   Adafruit_PN532::PrintHexChar(response, responseLen);
 #endif
+
+  // Check if the response indicates success
+  if (success && response[responseLen - 2] != 0x90 && response[responseLen - 1] != 0x00) {
+    success = false;
+    #ifdef NDEF_USE_SERIAL
+    Serial.println("No success status received from tag");
+    #endif
+  }
 
   if (success) {
   #ifdef NDEF_USE_SERIAL
