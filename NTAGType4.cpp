@@ -279,32 +279,60 @@ NdefMessage NTAGType4::isoReadNTAGType4NdefFile(Adafruit_PN532 &nfc, uint8_t nde
   #ifdef NDEF_USE_SERIAL
   Serial.println(__FUNCTION__);
   #endif
-  // ISOReadBinary command, target currently selected file, offset is read starting from byte 2, length 0x4E is read read 3 bytes from the NDEF File
-  uint8_t selectCmd[5] = { 0x00, 0xB0, 0x00, 0x02, ndefFileLength };
-  uint8_t selectCmdLen = sizeof(selectCmd);
-  uint8_t response[ndefFileLength + 2];  //+2 for status bytes
-  uint8_t responseLen = sizeof(response);
-  bool success = false;
 
-  success = nfc.inDataExchange(selectCmd, selectCmdLen, response, &responseLen);
-  #ifdef NDEF_USE_SERIAL
-  Serial.println(F("response:"));
-  Adafruit_PN532::PrintHexChar(response, responseLen);
-  #endif
+  uint8_t fileBuffer[ndefFileLength];
 
-  // Check if the response indicates success
-  if (success && response[responseLen - 2] != 0x90 && response[responseLen - 1] != 0x00) {
-    success = false;
+  // Request data back in chuncks (pages) to limit read buffer size and stay within the limit of the interface buffers use by the PN532 library
+  uint8_t pagesize = 50;
+  uint8_t pages = (ndefFileLength / pagesize) + 1;
+  uint8_t offset = 0; 
+  uint8_t fileLengthLeftToRead = ndefFileLength;
+  bool readSuccess = false;
+
+  for (uint8_t i = 0 ; i < pages; i++) {
+    // if no bytes to read anymore break out of reading loop
+    if (fileLengthLeftToRead == 0) {
+      break;
+    }
+
+    // if bytes left to read is smaller than pagesize use 
+    if (fileLengthLeftToRead < pagesize) {
+      pagesize = fileLengthLeftToRead;
+    }
+
+    // ISOReadBinary command, target currently selected file, offset is read starting from byte 2 + offset untill length of pagesize from the NDEF File
+    uint8_t selectCmd[5] = { 0x00, 0xB0, 0x00, (offset + 2), pagesize };
+    uint8_t selectCmdLen = sizeof(selectCmd);
+    uint8_t response[pagesize + 2];  //+2 for status bytes
+    uint8_t responseLen = sizeof(response);
+    bool success = false;
+
+    success = nfc.inDataExchange(selectCmd, selectCmdLen, response, &responseLen);
     #ifdef NDEF_USE_SERIAL
-    Serial.println("No success status received from tag");
+    Serial.println(F("response:"));
+    Adafruit_PN532::PrintHexChar(response, responseLen);
     #endif
+
+    // Check if the response indicates success
+    if (success && response[responseLen - 2] != 0x90 && response[responseLen - 1] != 0x00) {
+      success = false;
+      #ifdef NDEF_USE_SERIAL
+      Serial.println("No success status received from tag");
+      #endif
+    }
+
+    if (success) {
+      memcpy(&fileBuffer[offset], response, pagesize);
+      readSuccess = true;
+    } else {
+      readSuccess = false;
+      break;
+    }
+    offset += pagesize;
+    fileLengthLeftToRead -= pagesize;
   }
 
-  if (success) {
-    #ifdef NDEF_USE_SERIAL
-    Serial.println("Read NTAGType4 NDEF File successfully!");
-    #endif
-  } else {
+  if (!readSuccess) {
     #ifdef NDEF_USE_SERIAL
     Serial.println("Communication with the NTAGType4 failed!");
     #endif
@@ -312,5 +340,10 @@ NdefMessage NTAGType4::isoReadNTAGType4NdefFile(Adafruit_PN532 &nfc, uint8_t nde
     message.addEmptyRecord();
     return message;
   }
-  return NdefMessage(reinterpret_cast<byte*>(response),(int)responseLen);  
+
+  #ifdef NDEF_USE_SERIAL
+  Serial.println("Read NTAGType4 NDEF File successfully!");
+  #endif
+
+  return NdefMessage(reinterpret_cast<byte*>(fileBuffer),(int)ndefFileLength);
 }
